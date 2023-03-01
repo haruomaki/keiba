@@ -96,10 +96,15 @@ def get_race(id):
     mainblock = soup.find("div", id="main")
     tables = soup.find_all("table")
 
-    dfs = {}
-    dfs["タイトル"] = mainblock.find("h1").text
-    dfs["ステータス"] = clean(mainblock.find("diary_snap_cut").span.text)
-    dfs["スタンプ"] = clean(mainblock.find("p", class_="smalltxt").text)
+    dfs = {
+        "概要": pd.DataFrame(
+            data={
+                "タイトル": [mainblock.find("h1").text],
+                "ステータス": [clean(mainblock.find("diary_snap_cut").span.text)],
+                "スタンプ": [clean(mainblock.find("p", class_="smalltxt").text)],
+            }
+        )
+    }
 
     # tableタグのsummary属性を表名(キー)とする
     dfs |= {table["summary"]: parse_table(table) for table in tables}
