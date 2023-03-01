@@ -71,7 +71,7 @@ def get_raceinfo(id: int):
 def parse_table(table):
     rows = table.find_all("tr")
 
-    mat = []
+    mat = []  # 二次元リスト
     for row in rows:
         cells = row.find_all(("th", "td"))
 
@@ -79,12 +79,11 @@ def parse_table(table):
         line = [cell.get_text(" ").replace("\n", " ") for cell in cells]
         mat.append(line)
 
-    df = pd.DataFrame(data=mat)
-
     # 先頭行にデータが無い(＝ヘッダ行である)場合，そこは行名と解釈する
     if not rows[0].find("td"):
-        df.columns = df.iloc[0]
-        df.drop(0, inplace=True)
+        df = pd.DataFrame(mat[1:], columns=mat[0])
+    else:
+        df = pd.DataFrame(mat)
 
     return df
 
