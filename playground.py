@@ -1,10 +1,6 @@
 #%%
-import netkeiba_api.core as nk
+import netkeiba_api as nk
 
 
 #%%
-nk.my_sum(2, 4)
-
-
-# %%
-import pandas
+dfs = nk.get_race(id=202206050811)
