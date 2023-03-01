@@ -1,9 +1,9 @@
 #%%
-import netkeiba_api
+import netkeiba_api.core as nk
 
 
 #%%
-netkeiba_api.my_sum(2, 4)
+nk.my_sum(2, 4)
 
 
 # %%
