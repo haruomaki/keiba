@@ -71,14 +71,15 @@ def get_raceinfo(id: int):
 def parse_table(table):
     rows = table.find_all("tr")
 
-    df = pd.DataFrame()
-
+    mat = []
     for row in rows:
         cells = row.find_all(("th", "td"))
 
         # <br>と"\n"をスペースに変換する https://stackoverflow.com/a/48628074
-        values = [cell.get_text(" ").replace("\n", " ") for cell in cells]
-        df = df.append(pd.Series(values), ignore_index=True)
+        line = [cell.get_text(" ").replace("\n", " ") for cell in cells]
+        mat.append(line)
+
+    df = pd.DataFrame(data=mat)
 
     # 先頭行にデータが無い(＝ヘッダ行である)場合，そこは行名と解釈する
     if not rows[0].find("td"):
@@ -98,11 +99,11 @@ def get_race(id):
 
     dfs = {
         "概要": pd.DataFrame(
-            data={
-                "タイトル": [mainblock.find("h1").text],
-                "ステータス": [clean(mainblock.find("diary_snap_cut").span.text)],
-                "スタンプ": [clean(mainblock.find("p", class_="smalltxt").text)],
-            }
+            data=[
+                mainblock.find("h1").text,
+                clean(mainblock.find("diary_snap_cut").span.text),
+                clean(mainblock.find("p", class_="smalltxt").text),
+            ],
         )
     }
 
