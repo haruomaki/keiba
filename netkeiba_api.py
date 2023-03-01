@@ -1,4 +1,6 @@
 #%%
+import requests
+from bs4 import BeautifulSoup
 import pandas as pd
 
 
@@ -43,32 +45,25 @@ def get_raceinfo(id: int):
 
 
 # %%
-fetch_race(202001020405)
+# fetch_race(202001020405)
 
 
-#%%
-raw_tables = pd.read_html(f"https://db.netkeiba.com/horse/2018105027/")
+# #%%
+# raw_tables = pd.read_html(f"https://db.netkeiba.com/horse/2018105027/")
 
-# NOTE: 「レース分析」と「注目馬 レース後の短評」が無いレースもあるが，その場合も今のところ問題無く動く
-tablekeys = [
-    "適性レビュー",  # FIXME: NaNのみ
-    "基本データ",
-    "血統",
-    "受賞歴",
-    "競走成績",
-    "みんなの適性レビュー",  # FIXME: NaNのみ
-    "netkeibaレーティング",
-]
-dict(zip(tablekeys, raw_tables))
-# tables = dict(zip(tablekeys, raw_tables))
-# tables["払い戻し"] = pd.concat([tables.pop("払い戻し1"), tables.pop("払い戻し2")])
-
-
-#%%
-import requests
-from bs4 import BeautifulSoup
-import csv
-import pandas as pd
+# # NOTE: 「レース分析」と「注目馬 レース後の短評」が無いレースもあるが，その場合も今のところ問題無く動く
+# tablekeys = [
+#     "適性レビュー",  # FIXME: NaNのみ
+#     "基本データ",
+#     "血統",
+#     "受賞歴",
+#     "競走成績",
+#     "みんなの適性レビュー",  # FIXME: NaNのみ
+#     "netkeibaレーティング",
+# ]
+# dict(zip(tablekeys, raw_tables))
+# # tables = dict(zip(tablekeys, raw_tables))
+# # tables["払い戻し"] = pd.concat([tables.pop("払い戻し1"), tables.pop("払い戻し2")])
 
 
 #%%
@@ -98,10 +93,16 @@ def get_race(id):
     page = requests.get(url)  # TODO: ダウンロード済みのキャッシュを用いる
 
     soup = BeautifulSoup(page.content, "html.parser")
+    mainblock = soup.find("div", id="main")
     tables = soup.find_all("table")
 
+    dfs = {}
+    dfs["タイトル"] = mainblock.find("h1").text
+    dfs["ステータス"] = clean(mainblock.find("diary_snap_cut").span.text)
+    dfs["スタンプ"] = clean(mainblock.find("p", class_="smalltxt").text)
+
     # tableタグのsummary属性を表名(キー)とする
-    dfs = {table["summary"]: parse_table(table) for table in tables}
+    dfs |= {table["summary"]: parse_table(table) for table in tables}
 
     return dfs
 
@@ -113,3 +114,26 @@ dfs = get_race(id=202206050811)
 # ファイルに保存
 for (name, df) in dfs.items():
     df.to_csv(f"data/{name}.csv", index=False)
+
+
+#%%
+id = 202206050811
+url = f"https://db.netkeiba.com/race/{id}/"
+page = requests.get(url)  # TODO: ダウンロード済みのキャッシュを用いる
+
+soup = BeautifulSoup(page.content, "html.parser")
+tables = soup.find_all("table")
+
+# %%
+mainblock = soup.find("div", id="main")
+
+# %%
+# 特殊な文字の置換
+def clean(s):
+    s = s.replace("\xa0", " ")  # &nbsp;
+    return s
+
+
+mainblock.find("h1").get_text()
+clean(mainblock.find("diary_snap_cut").span.text)
+clean(mainblock.find("p", class_="smalltxt").text)
