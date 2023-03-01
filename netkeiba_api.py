@@ -3,7 +3,6 @@ import requests
 from requests_cache import CachedSession
 from bs4 import BeautifulSoup
 import pandas as pd
-from pathlib import Path
 from time import time, sleep
 
 session = CachedSession()
@@ -29,26 +28,6 @@ def fetch_url(url):
 
 
 #%%
-def fetch_race(id: int):
-    raw_tables = pd.read_html(f"https://db.netkeiba.com/race/{id}/")
-
-    # NOTE: 「レース分析」と「注目馬 レース後の短評」が無いレースもあるが，その場合も今のところ問題無く動く
-    tablekeys = [
-        "結果/払戻",
-        "払い戻し1",
-        "払い戻し2",
-        "馬場情報",
-        "コーナー通過順位",
-        "ラップタイム",
-        "レース分析",
-        "注目馬 レース後の短評",
-    ]
-    tables = dict(zip(tablekeys, raw_tables))
-    tables["払い戻し"] = pd.concat([tables.pop("払い戻し1"), tables.pop("払い戻し2")])
-
-    return tables
-
-
 # https://walkintheforest.net/r-keiba-scraping/#参考
 sites = ["札幌", "函館", "福島", "新潟", "東京", "中山", "中京", "京都", "阪神", "小倉"]
 
@@ -148,38 +127,3 @@ def get_race(id):
     dfs["レース結果"].columns = [c.replace(" ", "") for c in dfs["レース結果"].columns]
 
     return dfs
-
-
-id = 202206050811
-id = 202205040911
-dfs = get_race(id)
-
-
-#%%
-# ファイルに保存
-dir = Path("data/%d" % dfs["概要"].iloc[0])
-dir.mkdir(parents=True, exist_ok=True)
-for (name, df) in dfs.items():
-    df.to_csv(f"{dir}/{name}.csv", index=False)
-
-
-#%%
-id = 202206050811
-url = f"https://db.netkeiba.com/race/{id}/"
-page = requests.get(url)  # TODO: ダウンロード済みのキャッシュを用いる
-
-soup = BeautifulSoup(page.content, "html.parser")
-tables = soup.find_all("table")
-
-# %%
-mainblock = soup.find("div", id="main")
-
-# %%
-mainblock.find("h1").get_text()
-clean(mainblock.find("diary_snap_cut").span.text)
-clean(mainblock.find("p", class_="smalltxt").text)
-
-
-#%%
-session = requests_cache.CachedSession()
-print(session.cache.urls)
