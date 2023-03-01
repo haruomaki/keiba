@@ -1,8 +1,31 @@
 #%%
 import requests
+from requests_cache import CachedSession
 from bs4 import BeautifulSoup
 import pandas as pd
 from pathlib import Path
+from time import time, sleep
+
+session = CachedSession()
+delay = 10
+last_fetched = 0
+
+
+# キャッシュが無い場合、最低delay秒間の間を空けてダウンロードしてくる
+def fetch_url(url):
+    if not session.cache.has_url(url):
+        print("キャッシュがありません")
+
+        global last_fetched
+        now = time()
+        rest = delay - (now - last_fetched)
+        if rest > 0:
+            print("スリープ: %f秒" % rest)
+            sleep(rest)
+
+        last_fetched = time()
+
+    return session.get(url)
 
 
 #%%
@@ -95,7 +118,7 @@ def parse_table(table):
 
 def get_race(id):
     url = f"https://db.netkeiba.com/race/{id}/"
-    page = requests.get(url)  # TODO: ダウンロード済みのキャッシュを用いる
+    page = fetch_url(url)
 
     soup = BeautifulSoup(page.content, "html.parser")
     mainblock = soup.find("div", id="main")
@@ -155,3 +178,8 @@ mainblock = soup.find("div", id="main")
 mainblock.find("h1").get_text()
 clean(mainblock.find("diary_snap_cut").span.text)
 clean(mainblock.find("p", class_="smalltxt").text)
+
+
+#%%
+session = requests_cache.CachedSession()
+print(session.cache.urls)
