@@ -1,6 +1,10 @@
 #%%
-import mykeiba
+import netkeiba_api
 
 
 #%%
-mykeiba.my_sum(2, 4)
+netkeiba_api.my_sum(2, 4)
+
+
+# %%
+import pandas
