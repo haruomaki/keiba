@@ -70,19 +70,6 @@ from bs4 import BeautifulSoup
 import csv
 import pandas as pd
 
-# url = "https://en.wikipedia.org/wiki/Transistor_count"
-# page = requests.get(url)
-id = 202206050811
-url = f"https://db.netkeiba.com/race/{id}/"
-page = requests.get(url)
-
-soup = BeautifulSoup(page.content, "html.parser")
-# table = soup.find("table", {"class": "wikitable"}).tbody
-tables = soup.find_all("table")
-
-
-# def replace
-
 
 #%%
 # 参考: https://qiita.com/go_honn/items/ec96c2246229e4ee2ea6#コードまとめ
@@ -106,17 +93,23 @@ def parse_table(table):
     return df
 
 
-dfs = {}
-for table in tables:
-    dfkey = table["summary"]  # tableタグのsummary属性を表名とする
-    df = parse_table(table)
-    dfs |= {dfkey: df}
+def get_race(id):
+    url = f"https://db.netkeiba.com/race/{id}/"
+    page = requests.get(url)  # TODO: ダウンロード済みのキャッシュを用いる
+
+    soup = BeautifulSoup(page.content, "html.parser")
+    tables = soup.find_all("table")
+
+    # tableタグのsummary属性を表名(キー)とする
+    dfs = {table["summary"]: parse_table(table) for table in tables}
+
+    return dfs
+
+
+dfs = get_race(id=202206050811)
 
 
 #%%
 # ファイルに保存
 for (name, df) in dfs.items():
-    df.to_csv(f"{name}.csv", index=False)
-
-#%%
-tables[0]["summary"]
+    df.to_csv(f"data/{name}.csv", index=False)
