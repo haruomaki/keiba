@@ -43,7 +43,7 @@ def get_raceinfo(id: int):
 
 
 # %%
-# get_race(202001020405)
+fetch_race(202001020405)
 
 
 #%%
@@ -62,3 +62,67 @@ tablekeys = [
 dict(zip(tablekeys, raw_tables))
 # tables = dict(zip(tablekeys, raw_tables))
 # tables["払い戻し"] = pd.concat([tables.pop("払い戻し1"), tables.pop("払い戻し2")])
+
+
+#%%
+import requests
+from bs4 import BeautifulSoup
+import csv
+import pandas as pd
+
+# url = "https://en.wikipedia.org/wiki/Transistor_count"
+# page = requests.get(url)
+id = 202206050811
+url = f"https://db.netkeiba.com/race/{id}/"
+page = requests.get(url)
+
+soup = BeautifulSoup(page.content, "html.parser")
+# table = soup.find("table", {"class": "wikitable"}).tbody
+tables = soup.find_all("table")
+
+
+# def replace
+
+
+#%%
+# 参考: https://qiita.com/go_honn/items/ec96c2246229e4ee2ea6#コードまとめ
+def parse_table(table):
+    rows = table.find_all("tr")
+
+    df = pd.DataFrame()
+
+    for row in rows:
+        cells = row.find_all(("th", "td"))
+
+        # <br>と"\n"をスペースに変換する https://stackoverflow.com/a/48628074
+        values = [cell.get_text(" ").replace("\n", " ") for cell in cells]
+        df = df.append(pd.Series(values), ignore_index=True)
+        # values = []
+        # for cell in cells:
+        #     # cell.br.replace_with("\n")
+        #     values.append(cell.get_text(" "))
+        # df = df.append(pd.Series(values), ignore_index=True)
+
+    # 先頭行にデータが無い(＝ヘッダ行である)場合，そこは行名と解釈する
+    if not rows[0].find("td"):
+        df.columns = df.iloc[0]
+        df.drop(0, inplace=True)
+
+    return df
+
+
+dfs = {}
+for table in tables:
+    dfkey = table["summary"]
+    df = parse_table(table)
+    # df = pd.read_html(table.prettify())[0]
+    dfs |= {dfkey: df}
+
+
+#%%
+# ファイルに保存
+for (name, df) in dfs.items():
+    df.to_csv(f"{name}.csv", index=False)
+
+#%%
+tables[0]["summary"]
