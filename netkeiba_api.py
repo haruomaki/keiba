@@ -67,6 +67,10 @@ def get_raceinfo(id: int):
 
 
 #%%
+def replace_nbsp(s):
+    return s.replace("\xa0", " ")  # &nbsp;
+
+
 # 参考: https://qiita.com/go_honn/items/ec96c2246229e4ee2ea6#コードまとめ
 def parse_table(table):
     rows = table.find_all("tr")
@@ -100,14 +104,23 @@ def get_race(id):
         "概要": pd.DataFrame(
             data=[
                 mainblock.find("h1").text,
-                clean(mainblock.find("diary_snap_cut").span.text),
-                clean(mainblock.find("p", class_="smalltxt").text),
+                replace_nbsp(mainblock.find("diary_snap_cut").span.text),
+                replace_nbsp(mainblock.find("p", class_="smalltxt").text),
             ],
         )
     }
 
-    # tableタグのsummary属性を表名(キー)とする
-    dfs |= {table["summary"]: parse_table(table) for table in tables}
+    for table in tables:
+        k = table["summary"]  # tableタグのsummary属性をキーとする
+        df = parse_table(table)
+        if k in dfs:
+            # summary属性が重複した場合はDataFrameを結合していく
+            dfs[k] = pd.concat([dfs[k], df])
+        else:
+            dfs[k] = df
+
+    # 列名の修正
+    dfs["レース結果"].columns = [c.replace(" ", "") for c in dfs["レース結果"].columns]
 
     return dfs
 
@@ -133,12 +146,6 @@ tables = soup.find_all("table")
 mainblock = soup.find("div", id="main")
 
 # %%
-# 特殊な文字の置換
-def clean(s):
-    s = s.replace("\xa0", " ")  # &nbsp;
-    return s
-
-
 mainblock.find("h1").get_text()
 clean(mainblock.find("diary_snap_cut").span.text)
 clean(mainblock.find("p", class_="smalltxt").text)
