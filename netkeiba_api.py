@@ -80,7 +80,7 @@ def parse_table(table):
         cells = row.find_all(("th", "td"))
 
         # <br>と"\n"をスペースに変換する https://stackoverflow.com/a/48628074
-        line = [cell.get_text(" ").replace("\n", " ") for cell in cells]
+        line = [cell.get_text(" ", strip=True) for cell in cells]
         mat.append(line)
 
     # 先頭行にデータが無い(＝ヘッダ行である)場合，そこは行名と解釈する
