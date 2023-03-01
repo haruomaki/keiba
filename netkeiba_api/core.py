@@ -97,11 +97,6 @@ def parse_table(table):
         # <br>と"\n"をスペースに変換する https://stackoverflow.com/a/48628074
         values = [cell.get_text(" ").replace("\n", " ") for cell in cells]
         df = df.append(pd.Series(values), ignore_index=True)
-        # values = []
-        # for cell in cells:
-        #     # cell.br.replace_with("\n")
-        #     values.append(cell.get_text(" "))
-        # df = df.append(pd.Series(values), ignore_index=True)
 
     # 先頭行にデータが無い(＝ヘッダ行である)場合，そこは行名と解釈する
     if not rows[0].find("td"):
@@ -113,9 +108,8 @@ def parse_table(table):
 
 dfs = {}
 for table in tables:
-    dfkey = table["summary"]
+    dfkey = table["summary"]  # tableタグのsummary属性を表名とする
     df = parse_table(table)
-    # df = pd.read_html(table.prettify())[0]
     dfs |= {dfkey: df}
 
 
