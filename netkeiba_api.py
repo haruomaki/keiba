@@ -78,7 +78,8 @@ def parse_table(table):
             if rs >= 2:
                 cellinfo.rowspan = rs - 1
                 next_line_info.append(cellinfo)
-            line.append([cellinfo.value] * cs)
+            for _ in range(cs):
+                line.append(cellinfo.value)
             return cs
 
         while True:
@@ -170,11 +171,11 @@ soup = BeautifulSoup(page.content, "html.parser")
 mainblock = soup.find("div", id="main")
 tables = soup.find_all("table")
 
-# dfs = {}
-# for table in tables:
-#     k = table["summary"]
-#     df = parse_table(table)
-#     dfs |= {k: df}
+dfs = {}
+for table in tables:
+    k = table["summary"]
+    df = parse_table(table)
+    dfs |= {k: df}
 
-tables[2]
-parse_table(tables[2])
+# tables[2]
+# parse_table(tables[2])
