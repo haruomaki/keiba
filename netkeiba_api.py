@@ -3,6 +3,7 @@ from requests_cache import CachedSession
 from bs4 import BeautifulSoup
 import pandas as pd
 from time import time, sleep
+from dataclasses import dataclass
 
 session = CachedSession()
 delay = 10
@@ -51,7 +52,12 @@ def replace_nbsp(s):
     return s.replace("\xa0", " ")  # &nbsp;
 
 
-# class Cellinfo:
+@dataclass
+class Cellinfo:
+    pos: int
+    rowspan: int
+    colspan: int
+    value: str
 
 
 # 参考: https://qiita.com/go_honn/items/ec96c2246229e4ee2ea6#コードまとめ
@@ -66,39 +72,31 @@ def parse_table(table):
         line = []
         x = 0
 
-        def extend_line(cellinfo, x):
-            pos = cellinfo["pos"]
-            rowspan = cellinfo["rowspan"]
-            colspan = cellinfo["colspan"]
-            value = cellinfo["value"]
-            if rowspan >= 2:
-                next_line_info.append(
-                    {
-                        "pos": pos,
-                        "rowspan": rowspan - 1,
-                        "colspan": colspan,
-                        "value": value,
-                    }
-                )
-            line.append([value] * colspan)
-            return x + colspan
+        def extend_line(cellinfo: Cellinfo):
+            rs = cellinfo.rowspan
+            cs = cellinfo.colspan
+            if rs >= 2:
+                cellinfo.rowspan = rs - 1
+                next_line_info.append(cellinfo)
+            line.append([cellinfo.value] * cs)
+            return cs
 
         while True:
-            if current_line_info and current_line_info[0]["pos"] == x:
-                x = extend_line(current_line_info.pop(0), x)
+            if current_line_info and current_line_info[0].pos == x:
+                x += extend_line(current_line_info.pop(0))
             else:
                 if not cells:
                     break
                 cell = cells.pop(0)
-                cellinfo = {
-                    "pos": x,
-                    "rowspan": int(cell["rowspan"]) if "rowspan" in cell.attrs else 1,
-                    "colspan": int(cell["colspan"]) if "colspan" in cell.attrs else 1,
-                    "value": cell.get_text(
+                cellinfo = Cellinfo(
+                    x,
+                    int(cell["rowspan"]) if "rowspan" in cell.attrs else 1,
+                    int(cell["colspan"]) if "colspan" in cell.attrs else 1,
+                    cell.get_text(
                         " ", strip=True
                     ),  # <br>と"\n"をスペースに変換する https://stackoverflow.com/a/48628074
-                }
-                x = extend_line(cellinfo, x)
+                )
+                x += extend_line(cellinfo)
 
         mat.append(line)
         current_line_info = next_line_info.copy()
