@@ -1,5 +1,4 @@
 #%%
-import requests
 from requests_cache import CachedSession
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -47,31 +46,12 @@ def get_raceinfo(id: int):
     return (年, 回, 場所, 日目, レース)
 
 
-# %%
-# fetch_race(202001020405)
-
-
-# #%%
-# raw_tables = pd.read_html(f"https://db.netkeiba.com/horse/2018105027/")
-
-# # NOTE: 「レース分析」と「注目馬 レース後の短評」が無いレースもあるが，その場合も今のところ問題無く動く
-# tablekeys = [
-#     "適性レビュー",  # FIXME: NaNのみ
-#     "基本データ",
-#     "血統",
-#     "受賞歴",
-#     "競走成績",
-#     "みんなの適性レビュー",  # FIXME: NaNのみ
-#     "netkeibaレーティング",
-# ]
-# dict(zip(tablekeys, raw_tables))
-# # tables = dict(zip(tablekeys, raw_tables))
-# # tables["払い戻し"] = pd.concat([tables.pop("払い戻し1"), tables.pop("払い戻し2")])
-
-
 #%%
 def replace_nbsp(s):
     return s.replace("\xa0", " ")  # &nbsp;
+
+
+# class Cellinfo:
 
 
 # 参考: https://qiita.com/go_honn/items/ec96c2246229e4ee2ea6#コードまとめ
@@ -79,12 +59,50 @@ def parse_table(table):
     rows = table.find_all("tr")
 
     mat = []  # 二次元リスト
+    current_line_info = []
+    next_line_info = []
     for row in rows:
         cells = row.find_all(("th", "td"))
+        line = []
+        x = 0
 
-        # <br>と"\n"をスペースに変換する https://stackoverflow.com/a/48628074
-        line = [cell.get_text(" ", strip=True) for cell in cells]
+        def extend_line(cellinfo, x):
+            pos = cellinfo["pos"]
+            rowspan = cellinfo["rowspan"]
+            colspan = cellinfo["colspan"]
+            value = cellinfo["value"]
+            if rowspan >= 2:
+                next_line_info.append(
+                    {
+                        "pos": pos,
+                        "rowspan": rowspan - 1,
+                        "colspan": colspan,
+                        "value": value,
+                    }
+                )
+            line.append([value] * colspan)
+            return x + colspan
+
+        while True:
+            if current_line_info and current_line_info[0]["pos"] == x:
+                x = extend_line(current_line_info.pop(0), x)
+            else:
+                if not cells:
+                    break
+                cell = cells.pop(0)
+                cellinfo = {
+                    "pos": x,
+                    "rowspan": int(cell["rowspan"]) if "rowspan" in cell.attrs else 1,
+                    "colspan": int(cell["colspan"]) if "colspan" in cell.attrs else 1,
+                    "value": cell.get_text(
+                        " ", strip=True
+                    ),  # <br>と"\n"をスペースに変換する https://stackoverflow.com/a/48628074
+                }
+                x = extend_line(cellinfo, x)
+
         mat.append(line)
+        current_line_info = next_line_info.copy()
+        next_line_info = []
 
     # 先頭行にデータが無い(＝ヘッダ行である)場合，そこは行名と解釈する
     if not rows[0].find("td"):
@@ -127,3 +145,38 @@ def get_race(id):
     dfs["レース結果"].columns = [c.replace(" ", "") for c in dfs["レース結果"].columns]
 
     return dfs
+
+
+# %%
+# raw_tables = pd.read_html(f"https://db.netkeiba.com/horse/2018105027/")
+
+# # NOTE: 「レース分析」と「注目馬 レース後の短評」が無いレースもあるが，その場合も今のところ問題無く動く
+# tablekeys = [
+#     "適性レビュー",  # FIXME: NaNのみ
+#     "基本データ",
+#     "血統",
+#     "受賞歴",
+#     "競走成績",
+#     "みんなの適性レビュー",  # FIXME: NaNのみ
+#     "netkeibaレーティング",
+# ]
+# dict(zip(tablekeys, raw_tables))
+# tables = dict(zip(tablekeys, raw_tables))
+# tables["払い戻し"] = pd.concat([tables.pop("払い戻し1"), tables.pop("払い戻し2")])
+
+
+url = "https://db.netkeiba.com/horse/2018105027/"
+page = fetch_url(url)
+
+soup = BeautifulSoup(page.content, "html.parser")
+mainblock = soup.find("div", id="main")
+tables = soup.find_all("table")
+
+# dfs = {}
+# for table in tables:
+#     k = table["summary"]
+#     df = parse_table(table)
+#     dfs |= {k: df}
+
+tables[2]
+parse_table(tables[2])
