@@ -112,6 +112,11 @@ def parse_table(table):
     return df
 
 
+# テスト
+soup = BeautifulSoup(open("test/ttt.html"), "html.parser")
+parse_table(soup)
+
+
 def get_race(id):
     url = f"https://db.netkeiba.com/race/{id}/"
     page = fetch_url(url)
