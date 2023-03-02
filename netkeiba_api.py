@@ -61,6 +61,7 @@ class Cellinfo:
 
 
 # 参考: https://qiita.com/go_honn/items/ec96c2246229e4ee2ea6#コードまとめ
+# アイデア: https://rooter.jp/web-crawling/parse-connected-table/
 def parse_table(table):
     rows = table.find_all("tr")
 
@@ -112,11 +113,6 @@ def parse_table(table):
     return df
 
 
-# テスト
-soup = BeautifulSoup(open("test/ttt.html"), "html.parser")
-parse_table(soup)
-
-
 def get_race(id):
     url = f"https://db.netkeiba.com/race/{id}/"
     page = fetch_url(url)
@@ -149,6 +145,11 @@ def get_race(id):
     dfs["レース結果"].columns = [c.replace(" ", "") for c in dfs["レース結果"].columns]
 
     return dfs
+
+
+#%% テスト
+soup = BeautifulSoup(open("test/ttt.html"), "html.parser")
+parse_table(soup)
 
 
 # %%
