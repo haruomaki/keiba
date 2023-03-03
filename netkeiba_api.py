@@ -164,7 +164,11 @@ def get_horse(id):
 def get_search_result(url):
     page = fetch_url(url)
     soup = BeautifulSoup(page.content, "html.parser")
+    headline = soup.find("div", class_="cate_bar").h2
     table = soup.find("table", summary="レース検索結果")
+
+    # 検索条件を抽出
+    query = headline.text[:-5]
 
     # レース名のハイパーリンクからレースIDを取得
     rows = table.find_all("tr")
@@ -179,18 +183,18 @@ def get_search_result(url):
     nextbutton = soup.find("a", title="次")
     if nextbutton:
         next_url = nextbutton["href"]
-        rest_df = get_search_result(next_url)
-        return pd.concat([df, rest_df]).reset_index(drop=True)
+        rest_df = get_search_result(next_url)[1]
+        return (query, pd.concat([df, rest_df]).reset_index(drop=True))
     else:
-        return df
+        return (query, df)
 
 
 #%%
 # url = f"https://db.netkeiba.com/?pid=race_list&word=&start_year=2020&start_mon=none&end_year=2020&end_mon=none&kyori_min=&kyori_max=&sort=date&list=100&page=196"
 # url = f"https://db.netkeiba.com/?pid=race_list&word=&start_year=2020&start_mon=none&end_year=2020&end_mon=none&kyori_min=&kyori_max=&sort=date&list=100&page=1"
 url = "https://db.netkeiba.com/?pid=race_list&word=&start_year=2020&start_mon=none&end_year=2020&end_mon=none&grade%5B%5D=1&kyori_min=&kyori_max=&sort=date&list=100"
-df = get_search_result(url)
-df.to_csv("data/s.csv", index=False)
+(query, df) = get_search_result(url)
+df.to_csv(f"data/{query}.csv", index=False)
 
 
 #%%
