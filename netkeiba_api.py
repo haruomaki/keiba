@@ -126,7 +126,7 @@ def parse_table(table, separator=""):
     return df
 
 
-def get_race(id, autosave=True):
+def get_race(id, autosave=True, raw=False):
     url = f"https://db.netkeiba.com/race/{id}/"
     page = fetch_url(url)
 
@@ -154,6 +154,10 @@ def get_race(id, autosave=True):
         else:
             dfs[k] = df
 
+    if not raw:
+        dfs["レース結果"]["着順"] = dfs["レース結果"]["着順"].replace("中", -1)
+        dfs["レース結果"]["賞金(万円)"] = [x.replace(",", "") for x in dfs["レース結果"]["賞金(万円)"]]
+
     if autosave:
         dir = Path("data/race/%d" % id)
         dir.mkdir(parents=True, exist_ok=True)
@@ -165,8 +169,10 @@ def get_race(id, autosave=True):
 
 #%% テスト
 # soup = BeautifulSoup(open("test/ttt.html"), "html.parser")
-soup = BeautifulSoup(open("test/empty_tr.html"), "html.parser")
-parse_table(soup)
+# soup = BeautifulSoup(open("test/empty_tr.html"), "html.parser")
+# parse_table(soup)
+dfs = get_race(202206050710)
+dfs["レース結果"]
 
 
 # %%
