@@ -1,4 +1,5 @@
 #%%
+from requests.exceptions import ConnectionError
 from requests_cache import CachedSession
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -13,18 +14,22 @@ last_fetched = 0
 # キャッシュが無い場合、最低delay秒間の間を空けてダウンロードしてくる
 def fetch_url(url):
     if not session.cache.has_url(url):
-        print("キャッシュがありません")
+        print("新規URL: %s" % url)
 
         global last_fetched
         now = time()
         rest = delay - (now - last_fetched)
         if rest > 0:
-            print("スリープ: %f秒" % rest)
+            print("スリープ: %.1f秒" % rest)
             sleep(rest)
 
         last_fetched = time()
 
-    return session.get(url)
+    try:
+        return session.get(url)
+    except ConnectionError as e:
+        print("接続エラー:", e)
+        exit(1)
 
 
 #%%
@@ -187,22 +192,3 @@ def get_search_result(url):
         return (query, pd.concat([df, rest_df]).reset_index(drop=True))
     else:
         return (query, df)
-
-
-#%%
-# url = f"https://db.netkeiba.com/?pid=race_list&word=&start_year=2020&start_mon=none&end_year=2020&end_mon=none&kyori_min=&kyori_max=&sort=date&list=100&page=196"
-# url = f"https://db.netkeiba.com/?pid=race_list&word=&start_year=2020&start_mon=none&end_year=2020&end_mon=none&kyori_min=&kyori_max=&sort=date&list=100&page=1"
-url = "https://db.netkeiba.com/?pid=race_list&word=&start_year=2020&start_mon=none&end_year=2020&end_mon=none&grade%5B%5D=1&kyori_min=&kyori_max=&sort=date&list=100"
-(query, df) = get_search_result(url)
-df.to_csv(f"data/{query}.csv", index=False)
-
-
-#%%
-url = "https://db.netkeiba.com/?pid=race_list&word=&start_year=2020&start_mon=none&end_year=2020&end_mon=none&grade%5B%5D=1&kyori_min=&kyori_max=&sort=date&list=100"
-page = fetch_url(url)
-soup = BeautifulSoup(page.content, "html.parser")
-table = soup.find("table", summary="レース検索結果")
-
-rows = table.find_all("tr")
-ids = [row.find_all("td")[4].a["href"][6:18] for row in rows[1:]]
-df["レースID"] = ids
