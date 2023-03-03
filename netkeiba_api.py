@@ -74,6 +74,7 @@ def parse_table(table):
         x = 0
 
         def extend_line(cellinfo: Cellinfo):
+            nonlocal line, x
             rs = cellinfo.rowspan
             cs = cellinfo.colspan
             if rs >= 2:
@@ -81,27 +82,24 @@ def parse_table(table):
                 next_line_info.append(cellinfo)
             for _ in range(cs):
                 line.append(cellinfo.value)
-            return cs
+                x += 1
 
-        while True:
+        while current_line_info or cells:
             if current_line_info and current_line_info[0].pos == x:
-                x += extend_line(current_line_info.pop(0))
+                extend_line(current_line_info.pop(0))
             else:
-                if not cells:
-                    break
                 cell = cells.pop(0)
                 cellinfo = Cellinfo(
                     x,
                     int(cell["rowspan"]) if "rowspan" in cell.attrs else 1,
                     int(cell["colspan"]) if "colspan" in cell.attrs else 1,
-                    cell.get_text(
-                        " ", strip=True
-                    ),  # <br>と"\n"をスペースに変換する https://stackoverflow.com/a/48628074
+                    cell.get_text(" ", strip=True),
+                    # <br>と"\n"をスペースに変換する https://stackoverflow.com/a/48628074
                 )
-                x += extend_line(cellinfo)
+                extend_line(cellinfo)
 
         mat.append(line)
-        current_line_info = next_line_info.copy()
+        current_line_info = next_line_info
         next_line_info = []
 
     # 先頭行にデータが無い(＝ヘッダ行である)場合，そこは行名と解釈する

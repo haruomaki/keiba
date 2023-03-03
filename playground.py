@@ -5,7 +5,7 @@ from pathlib import Path
 
 #%%
 id = 202206050811  # 有馬記念
-id = 202205040911  # 天皇賞
+# id = 202205040911  # 天皇賞
 dfs = nk.get_race(id)
 
 
