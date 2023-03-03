@@ -151,35 +151,13 @@ parse_table(soup)
 
 
 # %%
-# raw_tables = pd.read_html(f"https://db.netkeiba.com/horse/2018105027/")
+def get_horse(id):
+    url = f"https://db.netkeiba.com/horse/{id}/"
+    page = fetch_url(url)
 
-# # NOTE: 「レース分析」と「注目馬 レース後の短評」が無いレースもあるが，その場合も今のところ問題無く動く
-# tablekeys = [
-#     "適性レビュー",  # FIXME: NaNのみ
-#     "基本データ",
-#     "血統",
-#     "受賞歴",
-#     "競走成績",
-#     "みんなの適性レビュー",  # FIXME: NaNのみ
-#     "netkeibaレーティング",
-# ]
-# dict(zip(tablekeys, raw_tables))
-# tables = dict(zip(tablekeys, raw_tables))
-# tables["払い戻し"] = pd.concat([tables.pop("払い戻し1"), tables.pop("払い戻し2")])
+    soup = BeautifulSoup(page.content, "html.parser")
+    tables = soup.find_all("table")
 
+    dfs = {table["summary"]: parse_table(table) for table in tables}
 
-url = "https://db.netkeiba.com/horse/2018105027/"
-page = fetch_url(url)
-
-soup = BeautifulSoup(page.content, "html.parser")
-mainblock = soup.find("div", id="main")
-tables = soup.find_all("table")
-
-dfs = {}
-for table in tables:
-    k = table["summary"]
-    df = parse_table(table)
-    dfs |= {k: df}
-
-# tables[2]
-# parse_table(tables[2])
+    return dfs
