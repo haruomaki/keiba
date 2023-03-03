@@ -33,6 +33,13 @@ def fetch_url(url):
         exit(1)
 
 
+# リストlの長さを強制的にlengthにする
+def force_length(l, length, padding=None):
+    while len(l) < length:
+        l.append(padding)
+    return l[:length]
+
+
 #%%
 # https://walkintheforest.net/r-keiba-scraping/#参考
 sites = ["札幌", "函館", "福島", "新潟", "東京", "中山", "中京", "京都", "阪神", "小倉"]
@@ -109,8 +116,10 @@ def parse_table(table, separator=""):
         next_line_info = []
 
     # 先頭行にデータが無い(＝ヘッダ行である)場合，そこは行名と解釈する
-    if not rows[0].find("td"):
-        df = pd.DataFrame(mat[1:], columns=mat[0])
+    # INFO: matが空の場合やジャグ配列の場合も問題無く動作する
+    if rows and not rows[0].find("td"):
+        df = pd.DataFrame(mat[1:])
+        df.columns = force_length(mat[0], df.shape[1])  # 先頭行の長さがdfの幅と異なる場合にも対応
     else:
         df = pd.DataFrame(mat)
 
@@ -155,7 +164,8 @@ def get_race(id, autosave=True):
 
 
 #%% テスト
-soup = BeautifulSoup(open("test/ttt.html"), "html.parser")
+# soup = BeautifulSoup(open("test/ttt.html"), "html.parser")
+soup = BeautifulSoup(open("test/empty_tr.html"), "html.parser")
 parse_table(soup)
 
 

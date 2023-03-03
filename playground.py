@@ -18,11 +18,17 @@ url = "https://db.netkeiba.com/?pid=race_list&word=&start_year=2022&start_mon=no
 (query, df_search_result) = nk.get_search_result(url)
 
 
+#%% 検索結果の各レースの情報を取得
+for i, id in enumerate(df_search_result["レースID"]):
+    id = int(id)
+    print(f"[{i}/{len(df_search_result)}] get_race: {id}")
+    nk.get_race(id)
+
+
 #%%
-# n番人気が本当にn着になったかどうか調べる
-id = 202206050911
-df = nk.get_race(id)["レース結果"]
-# def was_exact(n):
+# # n番人気が本当にn着になったかどうか調べる
+# id = 202206050911
+# df = nk.get_race(id)["レース結果"]
+# # def was_exact(n):
 
-
-df["着順"]
+nk.get_race(202206050710)

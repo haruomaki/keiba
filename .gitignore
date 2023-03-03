@@ -1,3 +1,3 @@
 /__pycache__/
-/*.sqlite
+/http_cache.sqlite
 /data/
