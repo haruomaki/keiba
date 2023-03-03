@@ -11,7 +11,7 @@ dfs = nk.get_race(id)
 
 #%%
 # ファイルに保存
-dir = Path("data/%d" % dfs["概要"].iloc[0])
+dir = Path("data/race/%d" % dfs["概要"].iloc[0])
 dir.mkdir(parents=True, exist_ok=True)
 for (name, df) in dfs.items():
     df.to_csv(f"{dir}/{name}.csv", index=False)

@@ -62,7 +62,7 @@ class Cellinfo:
 
 # 参考: https://qiita.com/go_honn/items/ec96c2246229e4ee2ea6#コードまとめ
 # アイデア: https://rooter.jp/web-crawling/parse-connected-table/
-def parse_table(table):
+def parse_table(table, separator=""):
     rows = table.find_all("tr")
 
     mat = []  # 二次元リスト
@@ -93,8 +93,8 @@ def parse_table(table):
                     x,
                     int(cell["rowspan"]) if "rowspan" in cell.attrs else 1,
                     int(cell["colspan"]) if "colspan" in cell.attrs else 1,
-                    cell.get_text(" ", strip=True),
-                    # <br>と"\n"をスペースに変換する https://stackoverflow.com/a/48628074
+                    cell.get_text(separator, strip=True),
+                    # separatorについて https://stackoverflow.com/a/48628074
                 )
                 extend_line(cellinfo)
 
@@ -132,15 +132,12 @@ def get_race(id):
 
     for table in tables:
         k = table["summary"]  # tableタグのsummary属性をキーとする
-        df = parse_table(table)
+        df = parse_table(table, " " if k == "払い戻し" else "")  # 「払い戻し」の表だけは改行を保持
         if k in dfs:
             # summary属性が重複した場合はDataFrameを結合していく
             dfs[k] = pd.concat([dfs[k], df])
         else:
             dfs[k] = df
-
-    # 列名の修正
-    dfs["レース結果"].columns = [c.replace(" ", "") for c in dfs["レース結果"].columns]
 
     return dfs
 
