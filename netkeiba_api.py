@@ -158,3 +158,47 @@ def get_horse(id):
     dfs = {table["summary"]: parse_table(table) for table in tables}
 
     return dfs
+
+
+#%%
+def get_search_result(url):
+    page = fetch_url(url)
+    soup = BeautifulSoup(page.content, "html.parser")
+    table = soup.find("table", summary="レース検索結果")
+
+    # レース名のハイパーリンクからレースIDを取得
+    rows = table.find_all("tr")
+    ids = [row.find_all("td")[4].a["href"][6:18] for row in rows[1:]]
+
+    # 表をパースして冒頭にID列追加
+    df = parse_table(table)
+    df.insert(0, "レースID", ids)
+
+    # 次のページが存在する場合、URLを取得して再帰的に実行
+    # NOTE: 再帰だと無駄＆重いかも。for文もアリ
+    nextbutton = soup.find("a", title="次")
+    if nextbutton:
+        next_url = nextbutton["href"]
+        rest_df = get_search_result(next_url)
+        return pd.concat([df, rest_df]).reset_index(drop=True)
+    else:
+        return df
+
+
+#%%
+# url = f"https://db.netkeiba.com/?pid=race_list&word=&start_year=2020&start_mon=none&end_year=2020&end_mon=none&kyori_min=&kyori_max=&sort=date&list=100&page=196"
+# url = f"https://db.netkeiba.com/?pid=race_list&word=&start_year=2020&start_mon=none&end_year=2020&end_mon=none&kyori_min=&kyori_max=&sort=date&list=100&page=1"
+url = "https://db.netkeiba.com/?pid=race_list&word=&start_year=2020&start_mon=none&end_year=2020&end_mon=none&grade%5B%5D=1&kyori_min=&kyori_max=&sort=date&list=100"
+df = get_search_result(url)
+df.to_csv("data/s.csv", index=False)
+
+
+#%%
+url = "https://db.netkeiba.com/?pid=race_list&word=&start_year=2020&start_mon=none&end_year=2020&end_mon=none&grade%5B%5D=1&kyori_min=&kyori_max=&sort=date&list=100"
+page = fetch_url(url)
+soup = BeautifulSoup(page.content, "html.parser")
+table = soup.find("table", summary="レース検索結果")
+
+rows = table.find_all("tr")
+ids = [row.find_all("td")[4].a["href"][6:18] for row in rows[1:]]
+df["レースID"] = ids
