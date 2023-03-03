@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 from time import time, sleep
 from dataclasses import dataclass
+from pathlib import Path
 
 session = CachedSession()
 delay = 10
@@ -116,7 +117,7 @@ def parse_table(table, separator=""):
     return df
 
 
-def get_race(id):
+def get_race(id, autosave=True):
     url = f"https://db.netkeiba.com/race/{id}/"
     page = fetch_url(url)
 
@@ -144,6 +145,12 @@ def get_race(id):
         else:
             dfs[k] = df
 
+    if autosave:
+        dir = Path("data/race/%d" % id)
+        dir.mkdir(parents=True, exist_ok=True)
+        for (name, df) in dfs.items():
+            df.to_csv(f"{dir}/{name}.csv", index=False)
+
     return dfs
 
 
@@ -153,7 +160,7 @@ parse_table(soup)
 
 
 # %%
-def get_horse(id):
+def get_horse(id, autosave=True):
     url = f"https://db.netkeiba.com/horse/{id}/"
     page = fetch_url(url)
 
@@ -162,11 +169,17 @@ def get_horse(id):
 
     dfs = {table["summary"]: parse_table(table) for table in tables}
 
+    if autosave:
+        dir = Path("data/horse/%d" % id)
+        dir.mkdir(parents=True, exist_ok=True)
+        for (name, df) in dfs.items():
+            df.to_csv(f"{dir}/{name}.csv", index=False)
+
     return dfs
 
 
 #%%
-def get_search_result(url):
+def get_search_result(url, autosave=True):
     page = fetch_url(url)
     soup = BeautifulSoup(page.content, "html.parser")
     headline = soup.find("div", class_="cate_bar").h2
@@ -189,6 +202,11 @@ def get_search_result(url):
     if nextbutton:
         next_url = nextbutton["href"]
         rest_df = get_search_result(next_url)[1]
-        return (query, pd.concat([df, rest_df]).reset_index(drop=True))
-    else:
-        return (query, df)
+        df = pd.concat([df, rest_df]).reset_index(drop=True)
+
+    if autosave:
+        dir = Path("data/search")
+        dir.mkdir(parents=True, exist_ok=True)
+        df.to_csv(f"{dir}/{query}.csv", index=False)
+
+    return (query, df)

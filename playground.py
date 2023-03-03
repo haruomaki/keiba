@@ -1,6 +1,5 @@
 #%%
 import netkeiba_api as nk
-from pathlib import Path
 
 
 #%%
@@ -9,30 +8,14 @@ id = 202206050811  # 有馬記念
 dfs = nk.get_race(id)
 
 
-#%%
-# ファイルに保存
-dir = Path("data/race/%d" % dfs["概要"].iloc[0])
-dir.mkdir(parents=True, exist_ok=True)
-for (name, df) in dfs.items():
-    df.to_csv(f"{dir}/{name}.csv", index=False)
-
-
 #%% 馬情報
 id = 2002100877  # ヴァーミリアン
 dfs = nk.get_horse(id)
 
 
-#%% ファイルに保存
-dir = Path("data/horse/%d" % id)
-dir.mkdir(parents=True, exist_ok=True)
-for (name, df) in dfs.items():
-    df.to_csv(f"{dir}/{name}.csv", index=False)
-
-
 #%% レースの検索
 url = "https://db.netkeiba.com/?pid=race_list&word=&start_year=2022&start_mon=none&end_year=2022&end_mon=none&jyo%5B%5D=01&jyo%5B%5D=02&jyo%5B%5D=03&jyo%5B%5D=04&jyo%5B%5D=05&jyo%5B%5D=06&jyo%5B%5D=07&jyo%5B%5D=08&jyo%5B%5D=09&jyo%5B%5D=10&grade%5B%5D=1&grade%5B%5D=2&grade%5B%5D=3&kyori_min=&kyori_max=&sort=date&list=100"
 (query, df_search_result) = nk.get_search_result(url)
-df_search_result.to_csv(f"data/search/{query}.csv", index=False)
 
 
 #%%
