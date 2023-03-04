@@ -18,12 +18,12 @@ arrival_hist <- function(k) {
     df_freq
     ggplot(df_freq, aes(着順, 頻度, fill = fill, label = label)) +
         geom_bar(stat = "identity") +
-        labs(subtitle = str_c(k, "番人気")) +
+        labs(subtitle = str_c(k, "番人気ha?👸")) +
         scale_fill_manual(values = c("TRUE" = "tomato", "FALSE" = "gray")) +
         geom_text(hjust = -0.3, vjust = 1.5) +
         theme(
             # text = element_text(family = "Noto Sans CJK JP"),
-            text = element_text(family = "メイリオ"),
+            # text = element_text(family = "sans-serif"),
             panel.grid = element_blank(),
             legend.position = "none"
         )
@@ -31,4 +31,23 @@ arrival_hist <- function(k) {
 # arrival_hist(1)
 plist <- map(1:6, arrival_hist)
 pp <- wrap_plots(plist, ncol = 2, nrow = 3, byrow = FALSE)
-ggsave("figure/人気の的中率.pdf", pp, device = cairo_pdf)
+pp <- pp + plot_annotation(
+    subtitle = "隴西の李徴は博学才穎、天宝の末年、若くして名を虎榜に連ね、ついで江南尉に補せられたが、性、狷介、自ら恃むところ頗る厚く、賤吏に甘んずるを潔しとしなかった。",
+    caption = "超级反派凌辰（化名潘洛斯）在和死对头超级英雄叶子暮的激战中意外穿越回2030年的高二"
+)
+# ggsave("figure/人気の的中率.pdf", pp, device = cairo_pdf)
+# ggsave("figure/人気の的中率.svg", pp, device = svg)
+
+
+svglite::svglite(
+    filename = "figure/ぐ.svg",
+    # width = 6, height = 2,
+    system_fonts = list(sans = "Noto Sans JP"),
+    web_fonts = list(
+        "https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap"
+    ),
+    fix_text_size = FALSE,
+    # standalone = TRUE,
+)
+plot(pp)
+dev.off()
