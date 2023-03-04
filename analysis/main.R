@@ -1,5 +1,6 @@
 library(tidyverse)
 library(patchwork)
+library(svglite)
 
 df <- read_csv("data/df.csv")
 
@@ -36,18 +37,11 @@ pp <- pp + plot_annotation(
     caption = "超级反派凌辰（化名潘洛斯）在和死对头超级英雄叶子暮的激战中意外穿越回2030年的高二"
 )
 # ggsave("figure/人気の的中率.pdf", pp, device = cairo_pdf)
-# ggsave("figure/人気の的中率.svg", pp, device = svg)
-
-
-svglite::svglite(
-    filename = "figure/ぐ.svg",
-    # width = 6, height = 2,
+ggsave(
+    "figure/人気の的中率.svg",
+    plot = pp,
+    device = svglite,
     system_fonts = list(sans = "Noto Sans JP"),
-    web_fonts = list(
-        "https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap"
-    ),
+    web_fonts = "https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap",
     fix_text_size = FALSE,
-    # standalone = TRUE,
 )
-plot(pp)
-dev.off()
