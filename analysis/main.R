@@ -19,7 +19,7 @@ arrival_hist <- function(k) {
         geom_bar(stat = "identity") +
         labs(subtitle = str_c(k, "番人気")) +
         scale_fill_manual(values = c("TRUE" = "tomato", "FALSE" = "gray"), guide = "none") +
-        geom_text(hjust = -0.3, vjust = 1.5)
+        geom_text(hjust = -0.3, vjust = 1.5, family = myfont)
 }
 
 plist <- map(1:6, arrival_hist)
@@ -27,6 +27,7 @@ pp <- wrap_plots(plist, ncol = 2, nrow = 3, byrow = FALSE) +
     plot_annotation(
         subtitle = "期間[2022年〜2022年]\n競馬場[札幌、函館、福島、新潟、東京、中山、中京、京都、阪神、小倉]\nクラス[G1、G2、G3]"
     ) & mytheme()
+pp
 
 # ggsave("figure/人気の的中率.pdf", pp, device = cairo_pdf)
 pp |> ggsave_svg("figure/人気の的中率.svg")
