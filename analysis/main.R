@@ -51,5 +51,4 @@ arrival_hist <- function(k) {
 # arrival_hist(1)
 plist <- map(1:6, arrival_hist)
 pp <- wrap_plots(plist, ncol = 2, nrow = 3, byrow = FALSE)
-ggsave("figure/人気の的中率.svg", pp, width = 20, height = 20, units = "cm")
-ggsave("figure/人気の的中率.pdf", pp, height = 20, width = 20, units = "cm", device = cairo_pdf)
+ggsave("figure/人気の的中率.pdf", pp, device = cairo_pdf)
