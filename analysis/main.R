@@ -1,16 +1,6 @@
-library(tidyverse)
-library(patchwork)
-library(svglite)
+source("~/R/lib.R")
 
 df <- read_csv("data/df.csv")
-
-
-mytheme <- function() {
-    theme(
-        text = element_text(family = "Kiwi Maru"),
-        panel.grid = element_blank(),
-    )
-}
 
 
 arrival_hist <- function(k) {
