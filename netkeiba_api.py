@@ -126,7 +126,7 @@ def parse_table(table, separator=""):
     return df
 
 
-def get_race(id, autosave=True, raw=False):
+def get_race(id, autosave=True):
     url = f"https://db.netkeiba.com/race/{id}/"
     page = fetch_url(url)
 
@@ -153,10 +153,6 @@ def get_race(id, autosave=True, raw=False):
             dfs[k] = pd.concat([dfs[k], df])
         else:
             dfs[k] = df
-
-    if not raw:
-        dfs["レース結果"]["着順"] = dfs["レース結果"]["着順"].replace("中", -1)
-        dfs["レース結果"]["賞金(万円)"] = [x.replace(",", "") for x in dfs["レース結果"]["賞金(万円)"]]
 
     if autosave:
         dir = Path("data/race/%d" % id)
