@@ -42,7 +42,8 @@ arrival_hist <- function(k) {
         scale_fill_manual(values = c("TRUE" = "tomato", "FALSE" = "gray")) +
         geom_text(hjust = -0.3, vjust = 1.5) +
         theme(
-            # text = element_text(family = "HiraKakuPro-W3"),
+            # text = element_text(family = "Noto Sans CJK JP"),
+            text = element_text(family = "メイリオ"),
             panel.grid = element_blank(),
             legend.position = "none"
         )
@@ -51,3 +52,4 @@ arrival_hist <- function(k) {
 plist <- map(1:6, arrival_hist)
 pp <- wrap_plots(plist, ncol = 2, nrow = 3, byrow = FALSE)
 ggsave("figure/人気の的中率.svg", pp, width = 20, height = 20, units = "cm")
+ggsave("figure/人気の的中率.pdf", pp, height = 20, width = 20, units = "cm", device = cairo_pdf)
